@@ -51,6 +51,18 @@ packages = pkgs.lib.attrsets.genAttrs targets (target: (cross-naersk' target).bu
 });
 ```
 
+## Targets
+
+Cross-naersk comes with configuration for the following targets:
+
+- armv7-unknown-linux-musleabihf
+- armv7-unknown-linux-gnueabihf
+- aarch64-unknown-linux-musl
+- i686-unknown-linux-musl
+- x86_64-unknown-linux-musl
+- x86_64-pc-windows-gnu
+- x86_64-unknown-freebsd
+
 ## Configuration
 
 cross-naersk sets a number of configuration options for naersk by default to make cross compiling work out of the box for most cases.
