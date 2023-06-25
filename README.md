@@ -38,6 +38,7 @@ targets = [
     "armv7-unknown-linux-musleabihf"
     "aarch64-unknown-linux-musl"
     "x86_64-pc-windows-gnu"
+    "x86_64-unknown-freebsd"
 ];
 ```
 
