@@ -98,6 +98,7 @@ in rec {
   in
     options: naerskForTarget.buildPackage (args options);
   defaultCrossArgsForTargets = targets: recursiveMerge (map (target: defaultCrossArgs.${target} or {}) targets);
+  execSufficForTarget = target: if lib.strings.hasInfix "windows" target then ".exe" else "";
   hostNaersk = naersk';
   mkShell = targets: args: let
     nonDeps = removeAttrs (defaultCrossArgsForTargets targets) ["nativeBuildInputs"];
