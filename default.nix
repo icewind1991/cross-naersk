@@ -9,7 +9,7 @@
   fetchurl,
   perl,
   mkShell,
-  rustVersion ? "stable",
+  toolchain ? rust-bin.stable.latest.default
 } @ inputs: let
   inherit (lib.strings) replaceStrings toUpper;
   inherit (builtins) removeAttrs foldl';
@@ -79,10 +79,10 @@
   crossArgs = options: recursiveMerge [defaultCrossArgs (options.crossArgs or {})];
 in rec {
   buildPackage = target: let
-    toolchain = rust-bin.${rustVersion}.latest.default.override {targets = [target];};
+    targetToolchain = toolchain.override {targets = [target];};
     naerskForTarget = callPackage naersk {
-      cargo = toolchain;
-      rustc = toolchain;
+      cargo = targetToolchain;
+      rustc = targetToolchain;
     };
     crossArgsForTarget = options:
       if hostTarget != target
@@ -109,7 +109,7 @@ in rec {
           deps
           ++ (args.nativeBuildInputs or [])
           ++ [
-            (rust-bin.${rustVersion}.latest.default.override {targets = targets ++ [hostTarget];})
+            (toolchain.override {targets = targets ++ [hostTarget];})
           ];
       });
 }

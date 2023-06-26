@@ -80,6 +80,17 @@ cross-naersk'.buildPackage target {
 })
 ```
 
+### Rust version
+
+You can change the rust version by passing a toolchain (from rust-overlay):
+
+```nix
+cross-naersk' = pkgs.callPackage cross-naersk {
+    inherit naersk;
+    toolchain = pkgs.rust-bin.beta.latest.default;
+};
+```
+
 ## Shell
 
 Cross-naersk also comes with a helper for building a devshell with all the parts required for the cross compilation
