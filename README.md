@@ -56,7 +56,6 @@ packages = pkgs.lib.attrsets.genAttrs targets (target: (cross-naersk' target).bu
 Cross-naersk comes with configuration for the following targets:
 
 - armv7-unknown-linux-musleabihf
-- armv7-unknown-linux-gnueabihf
 - aarch64-unknown-linux-musl
 - i686-unknown-linux-musl
 - x86_64-unknown-linux-musl

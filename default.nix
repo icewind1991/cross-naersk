@@ -44,7 +44,7 @@
 
   defaultCrossArgs = {
     "armv7-unknown-linux-musleabihf" = buildCrossArgs "armv7-unknown-linux-musleabihf" {
-      cc = pkgsCross.armv7l-hf-multiplatform.stdenv.cc;
+      cc = pkgsCross.muslpi.stdenv.cc;
     };
     "armv7-unknown-linux-gnueabihf" = buildCrossArgs "armv7-unknown-linux-gnueabihf" {
       cc = pkgsCross.armv7l-hf-multiplatform.stdenv.cc;
