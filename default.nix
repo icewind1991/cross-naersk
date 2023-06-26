@@ -105,6 +105,11 @@ in rec {
     inputs.mkShell (nonDeps
       // args
       // {
-        nativeBuildInputs = deps ++ (args.nativeBuildInputs or []);
+        nativeBuildInputs =
+          deps
+          ++ (args.nativeBuildInputs or [])
+          ++ [
+            (rust-bin.${rustVersion}.latest.default.override {targets = targets ++ [hostTarget];})
+          ];
       });
 }
