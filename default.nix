@@ -32,7 +32,7 @@
     rest = removeAttrs args ["rustFlags" "cc"];
   in (recursiveMerge [
     {
-      buildInputs = [cc];
+      nativeBuildInputs = [cc];
       "CARGO_TARGET_${targetUpperCase}_RUSTFLAGS" = rustFlags;
       "CARGO_TARGET_${targetUpperCase}_LINKER" = "${cc.targetPrefix}cc";
       "AR_${targetUnderscore}" = "${cc.targetPrefix}ar";
@@ -99,8 +99,8 @@ in rec {
   defaultCrossArgsForTargets = targets: recursiveMerge (map (target: defaultCrossArgs.${target} or {}) targets);
   hostNaersk = naersk';
   mkShell = targets: args: let
-    nonDeps = removeAttrs (defaultCrossArgsForTargets targets) ["buildInputs"];
-    deps = (defaultCrossArgsForTargets targets).buildInputs;
+    nonDeps = removeAttrs (defaultCrossArgsForTargets targets) ["nativeBuildInputs"];
+    deps = (defaultCrossArgsForTargets targets).nativeBuildInputs;
   in
     inputs.mkShell (nonDeps
       // args
