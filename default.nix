@@ -32,12 +32,13 @@
     rest = removeAttrs args ["rustFlags" "cc"];
   in (recursiveMerge [
     {
-      nativeBuildInputs = [cc];
+      nativeBuildInputs = [cc stdenv.cc];
       "CARGO_TARGET_${targetUpperCase}_RUSTFLAGS" = rustFlags;
       "CARGO_TARGET_${targetUpperCase}_LINKER" = "${cc.targetPrefix}cc";
       "AR_${targetUnderscore}" = "${cc.targetPrefix}ar";
       "CC_${targetUnderscore}" = "${cc.targetPrefix}cc";
       "CCX_${targetUnderscore}" = "${cc.targetPrefix}ccx";
+      "HOST_CC" = "${stdenv.cc.targetPrefix}cc";
     }
     rest
   ]);
