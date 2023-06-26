@@ -7,12 +7,12 @@
   naersk,
   stdenv,
   fetchurl,
+  perl,
+  mkShell,
   rustVersion ? "stable",
-}: target: let
+} @ inputs: let
   inherit (lib.strings) replaceStrings toUpper;
   inherit (builtins) removeAttrs foldl';
-  mingw_w64_cc = pkgsCross.mingwW64.stdenv.cc;
-  windows = pkgsCross.mingwW64.windows;
 
   freebsdSysrootX86 = callPackage ./freebsd-sysroot.nix {
     arch = "amd64";
@@ -58,7 +58,11 @@
     "x86_64-pc-windows-gnu" = buildCrossArgs "x86_64-pc-windows-gnu" {
       cc = pkgsCross.mingwW64.stdenv.cc;
       strictDeps = true;
-      overrideMain = args: args // {buildInputs = [windows.pthreads];};
+      # rink wants perl for windows targets
+      buildInputs = [perl];
+      # by adding the dependency in the (target specific) linker args instead of buildInputs
+      # we can prevent it trying to link to it for host build dependencies
+      rustFlags = "-C target-feature=+crt-static -Clink-arg=-L${pkgsCross.mingwW64.windows.pthreads}/lib";
     };
     "x86_64-unknown-freebsd" = buildCrossArgs "x86_64-unknown-freebsd" {
       cc = pkgsCross.x86_64-freebsd.stdenv.cc;
@@ -70,30 +74,37 @@
       cc = pkgsCross.musl64.stdenv.cc;
     };
   };
-
-  crossArgs = options: recursiveMerge [defaultCrossArgs (options.crossArgs or {})];
-
-  naersk' = callPackage naersk {};
   hostTarget = hostPlatform.config;
-  naerskForTarget = let
+  naersk' = callPackage naersk {};
+  crossArgs = options: recursiveMerge [defaultCrossArgs (options.crossArgs or {})];
+in rec {
+  buildPackage = target: let
     toolchain = rust-bin.${rustVersion}.latest.default.override {targets = [target];};
-  in
-    callPackage naersk {
+    naerskForTarget = callPackage naersk {
       cargo = toolchain;
       rustc = toolchain;
     };
-  crossArgsForTarget = options:
-    if hostTarget != target
-    then (crossArgs options).${target} or {}
-    else {};
-  args = options:
-    {
-      CARGO_BUILD_TARGET = target;
-    }
-    // (builtins.removeAttrs options ["crossArgs"])
-    // (crossArgsForTarget options);
-in rec {
-  buildPackage = options: naerskForTarget.buildPackage (args options);
-  defaultCrossArgsFor = target: defaultCrossArgs.${target} or {};
-  defaultCrossArgsForTargets = targets: recursiveMerge (map defaultCrossArgsFor targets);
+    crossArgsForTarget = options:
+      if hostTarget != target
+      then (crossArgs options).${target} or {}
+      else {};
+    args = options:
+      {
+        CARGO_BUILD_TARGET = target;
+      }
+      // (builtins.removeAttrs options ["crossArgs"])
+      // (crossArgsForTarget options);
+  in
+    options: naerskForTarget.buildPackage (args options);
+  defaultCrossArgsForTargets = targets: recursiveMerge (map (target: defaultCrossArgs.${target} or {}) targets);
+  hostNaersk = naersk';
+  mkShell = targets: args: let
+    nonDeps = removeAttrs (defaultCrossArgsForTargets targets) ["buildInputs"];
+    deps = (defaultCrossArgsForTargets targets).buildInputs;
+  in
+    inputs.mkShell (nonDeps
+      // args
+      // {
+        nativeBuildInputs = deps ++ (args.nativeBuildInputs or []);
+      });
 }

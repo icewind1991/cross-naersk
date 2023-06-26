@@ -48,7 +48,6 @@ Example 2:
       };
     };
   }
-
 */
   let
     recursiveMerge = attrList: let

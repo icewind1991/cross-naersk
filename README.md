@@ -45,7 +45,7 @@ targets = [
 Cross compile your package
 
 ```nix
-packages = pkgs.lib.attrsets.genAttrs targets (target: (cross-naersk' target).buildPackage {
+packages = pkgs.lib.attrsets.genAttrs targets (target: cross-naersk'.buildPackage target {
     pname = "mypkg";
     root = ./.;
 });
@@ -69,13 +69,25 @@ cross-naersk sets a number of configuration options for naersk by default to mak
 In the event that your projects requires additional naersk options set for some targets to compile, you can pass target specific options using `crossArgs`.
 
 ```nix
-(cross-naersk' target).buildPackage {
+cross-naersk'.buildPackage target {
     pname = "mypkg";
     root = ./.;
     crossArgs = {
       "x86_64-pc-windows-gnu" = {
-        buildInputs = [pkgsCross.mingwW64.windows.pthreads];
+        buildInputs = [pkgsCross.pkgsCross.mingwW64.openssl.dev];
       };
     };
 })
 ```
+
+## Shell
+
+Cross-naersk also comes with a helper for building a devshell with all the parts required for the cross compilation
+
+```nix
+devShells.default = cross-naersk'.mkShell targets {
+    # your normal shell configuration
+};
+```
+
+Using this you can use normal cargo commands to build for any of the specified targets (`cargo build --target aarch64-unknown-linux-musl`).
