@@ -24,12 +24,13 @@
 
   buildCrossArgs = target: {
     rustFlags ? "-C target-feature=+crt-static",
+    cFlags ? "",
     cc,
     ...
   } @ args: let
     targetUnderscore = replaceStrings ["-"] ["_"] target;
     targetUpperCase = toUpper targetUnderscore;
-    rest = removeAttrs args ["rustFlags" "cc"];
+    rest = removeAttrs args ["rustFlags" "cc" "cFlags"];
   in (recursiveMerge [
     {
       nativeBuildInputs = [cc stdenv.cc];
@@ -39,6 +40,7 @@
       "CC_${targetUnderscore}" = "${cc.targetPrefix}cc";
       "CCX_${targetUnderscore}" = "${cc.targetPrefix}ccx";
       "HOST_CC" = "${stdenv.cc.targetPrefix}cc";
+      "CFLAGS_${targetUnderscore}" = cFlags;
     }
     rest
   ]);
@@ -52,6 +54,7 @@
     };
     "aarch64-unknown-linux-musl" = buildCrossArgs "aarch64-unknown-linux-musl" {
       cc = pkgsCross.aarch64-multiplatform-musl.stdenv.cc;
+      cFlags = "-mno-outline-atomics";
     };
     "i686-unknown-linux-musl" = buildCrossArgs "i686-unknown-linux-musl" {
       cc = pkgsCross.musl32.stdenv.cc;
