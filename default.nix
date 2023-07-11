@@ -27,9 +27,12 @@
     targetDeps ? [],
     rustFlags ? (if isMusl target then "-C target-feature=+crt-static" else ""),
     cFlags ? "",
-    cc,
+    targetStdenv,
     ...
   } @ args: let
+    isHostTarget = targetStdenv.targetPlatform.config == stdenv.targetPlatform.config;
+    # don't use the pkgsCross cc if the target is the host platform
+    targetCc = if isHostTarget then stdenv.cc else targetStdenv.cc;
     targetUnderscore = replaceStrings ["-"] ["_"] target;
     targetUpperCase = toUpper targetUnderscore;
     rest = removeAttrs args ["rustFlags" "cc" "cFlags" "targetDeps"];
@@ -38,12 +41,12 @@
     rustFlagsWithDeps = rustFlags + concatStrings (map (targetDep: " -Clink-arg=-L${targetDep}/lib") targetDeps);
   in (recursiveMerge [
     {
-      nativeBuildInputs = [cc stdenv.cc];
+      nativeBuildInputs = [targetCc stdenv.cc];
       "CARGO_TARGET_${targetUpperCase}_RUSTFLAGS" = rustFlagsWithDeps;
-      "CARGO_TARGET_${targetUpperCase}_LINKER" = "${cc.targetPrefix}cc";
-      "AR_${targetUnderscore}" = "${cc.targetPrefix}ar";
-      "CC_${targetUnderscore}" = "${cc.targetPrefix}cc";
-      "CCX_${targetUnderscore}" = "${cc.targetPrefix}ccx";
+      "CARGO_TARGET_${targetUpperCase}_LINKER" = "${targetCc.targetPrefix}cc";
+      "AR_${targetUnderscore}" = "${targetCc.targetPrefix}ar";
+      "CC_${targetUnderscore}" = "${targetCc.targetPrefix}cc";
+      "CCX_${targetUnderscore}" = "${targetCc.targetPrefix}ccx";
       "HOST_CC" = "${stdenv.cc.targetPrefix}cc";
       "CFLAGS_${targetUnderscore}" = cFlags;
     }
@@ -52,23 +55,26 @@
 
   defaultCrossArgs = {
     "armv7-unknown-linux-musleabihf" = buildCrossArgs "armv7-unknown-linux-musleabihf" {
-      cc = pkgsCross.muslpi.stdenv.cc;
+      targetStdenv = pkgsCross.muslpi.stdenv;
     };
     "armv7-unknown-linux-gnueabihf" = buildCrossArgs "armv7-unknown-linux-gnueabihf" {
-      cc = pkgsCross.armv7l-hf-multiplatform.stdenv.cc;
+      targetStdenv = pkgsCross.armv7l-hf-multiplatform.stdenv;
     };
     "aarch64-unknown-linux-gnu" = buildCrossArgs "aarch64-unknown-linux-gnu" {
-      cc = pkgsCross.aarch64-multiplatform.stdenv.cc;
+      targetStdenv = pkgsCross.aarch64-multiplatform.stdenv;
     };
     "aarch64-unknown-linux-musl" = buildCrossArgs "aarch64-unknown-linux-musl" {
-      cc = pkgsCross.aarch64-multiplatform-musl.stdenv.cc;
+      targetStdenv = pkgsCross.aarch64-multiplatform-musl.stdenv;
       cFlags = "-mno-outline-atomics";
     };
     "i686-unknown-linux-musl" = buildCrossArgs "i686-unknown-linux-musl" {
-      cc = pkgsCross.musl32.stdenv.cc;
+      targetStdenv = pkgsCross.musl32.stdenv;
+    };
+    "i686-unknown-linux-gnu" = buildCrossArgs "i686-unknown-linux-gnu" {
+      targetStdenv = pkgsCross.gnu32.stdenv;
     };
     "x86_64-pc-windows-gnu" = buildCrossArgs "x86_64-pc-windows-gnu" {
-      cc = pkgsCross.mingwW64.stdenv.cc;
+      targetStdenv = pkgsCross.mingwW64.stdenv;
       strictDeps = true;
       # rink wants perl for windows targets
       buildInputs = [perl];
@@ -76,14 +82,17 @@
       rustFlags = "-C target-feature=+crt-static";
     };
     "x86_64-unknown-freebsd" = buildCrossArgs "x86_64-unknown-freebsd" {
-      cc = pkgsCross.x86_64-freebsd.stdenv.cc;
+      targetStdenv = pkgsCross.x86_64-freebsd.stdenv;
       targetDeps = [freebsdSysrootX86];
       rustFlags = "-C target-feature=+crt-static -Clink-arg=--sysroot=${freebsdSysrootX86}";
       X86_64_UNKNOWN_FREEBSD_OPENSSL_DIR = freebsdSysrootX86;
       BINDGEN_EXTRA_CLANG_ARGS_x86_64_unknown_freebsd = "--sysroot=${freebsdSysrootX86}";
     };
     "x86_64-unknown-linux-musl" = buildCrossArgs "x86_64-unknown-linux-musl" {
-      cc = pkgsCross.musl64.stdenv.cc;
+      targetStdenv = pkgsCross.musl64.stdenv;
+    };
+    "x86_64-unknown-linux-gnu" = buildCrossArgs "x86_64-unknown-linux-gnu" {
+      targetStdenv = pkgsCross.gnu64.stdenv;
     };
   };
   hostTarget = hostPlatform.config;

@@ -60,7 +60,9 @@ Cross-naersk comes with configuration for the following targets:
 - aarch64-unknown-linux-musl
 - aarch64-unknown-linux-gnu
 - i686-unknown-linux-musl
+- i686-unknown-linux-gnu
 - x86_64-unknown-linux-musl
+- x86_64-unknown-linux-gnu
 - x86_64-pc-windows-gnu
 - x86_64-unknown-freebsd
 
