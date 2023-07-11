@@ -11,8 +11,8 @@
   mkShell,
   toolchain ? rust-bin.stable.latest.default
 } @ inputs: let
-  inherit (lib.strings) replaceStrings toUpper;
-  inherit (builtins) removeAttrs foldl';
+  inherit (lib.strings) replaceStrings toUpper concatStrings hasInfix;
+  inherit (builtins) removeAttrs foldl' map;
 
   freebsdSysrootX86 = callPackage ./freebsd-sysroot.nix {
     arch = "amd64";
@@ -21,9 +21,11 @@
   };
 
   recursiveMerge = callPackage ./merge.nix {};
+  isMusl = hasInfix "-musl";
 
   buildCrossArgs = target: {
-    rustFlags ? "-C target-feature=+crt-static",
+    targetDeps ? [],
+    rustFlags ? (if isMusl target then "-C target-feature=+crt-static" else ""),
     cFlags ? "",
     cc,
     ...
@@ -31,10 +33,13 @@
     targetUnderscore = replaceStrings ["-"] ["_"] target;
     targetUpperCase = toUpper targetUnderscore;
     rest = removeAttrs args ["rustFlags" "cc" "cFlags"];
+    # by adding the dependency in the (target specific) linker args instead of buildInputs
+    # we can prevent it trying to link to it for host build dependencies
+    rustFlagsWithDeps = rustFlags + concatStrings (map (targetDep: " -Clink-arg=-L${targetDep}/lib") targetDeps);
   in (recursiveMerge [
     {
       nativeBuildInputs = [cc stdenv.cc];
-      "CARGO_TARGET_${targetUpperCase}_RUSTFLAGS" = rustFlags;
+      "CARGO_TARGET_${targetUpperCase}_RUSTFLAGS" = rustFlagsWithDeps;
       "CARGO_TARGET_${targetUpperCase}_LINKER" = "${cc.targetPrefix}cc";
       "AR_${targetUnderscore}" = "${cc.targetPrefix}ar";
       "CC_${targetUnderscore}" = "${cc.targetPrefix}cc";
@@ -52,6 +57,9 @@
     "armv7-unknown-linux-gnueabihf" = buildCrossArgs "armv7-unknown-linux-gnueabihf" {
       cc = pkgsCross.armv7l-hf-multiplatform.stdenv.cc;
     };
+    "aarch64-unknown-linux-gnu" = buildCrossArgs "aarch64-unknown-linux-gnu" {
+      cc = pkgsCross.aarch64-multiplatform.stdenv.cc;
+    };
     "aarch64-unknown-linux-musl" = buildCrossArgs "aarch64-unknown-linux-musl" {
       cc = pkgsCross.aarch64-multiplatform-musl.stdenv.cc;
       cFlags = "-mno-outline-atomics";
@@ -64,13 +72,13 @@
       strictDeps = true;
       # rink wants perl for windows targets
       buildInputs = [perl];
-      # by adding the dependency in the (target specific) linker args instead of buildInputs
-      # we can prevent it trying to link to it for host build dependencies
-      rustFlags = "-C target-feature=+crt-static -Clink-arg=-L${pkgsCross.mingwW64.windows.pthreads}/lib";
+      targetDeps = [pkgsCross.mingwW64.windows.pthreads];
+      rustFlags = "-C target-feature=+crt-static";
     };
     "x86_64-unknown-freebsd" = buildCrossArgs "x86_64-unknown-freebsd" {
       cc = pkgsCross.x86_64-freebsd.stdenv.cc;
-      rustFlags = "-C target-feature=+crt-static -Clink-arg=--sysroot=${freebsdSysrootX86} -Clink-arg=-L${freebsdSysrootX86}/lib";
+      targetDeps = [freebsdSysrootX86];
+      rustFlags = "-C target-feature=+crt-static -Clink-arg=--sysroot=${freebsdSysrootX86}";
       X86_64_UNKNOWN_FREEBSD_OPENSSL_DIR = freebsdSysrootX86;
       BINDGEN_EXTRA_CLANG_ARGS_x86_64_unknown_freebsd = "--sysroot=${freebsdSysrootX86}";
     };

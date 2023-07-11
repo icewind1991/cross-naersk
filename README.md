@@ -57,6 +57,7 @@ Cross-naersk comes with configuration for the following targets:
 
 - armv7-unknown-linux-musleabihf
 - aarch64-unknown-linux-musl
+- aarch64-unknown-linux-gnu
 - i686-unknown-linux-musl
 - x86_64-unknown-linux-musl
 - x86_64-pc-windows-gnu
