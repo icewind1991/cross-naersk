@@ -32,7 +32,7 @@
   } @ args: let
     targetUnderscore = replaceStrings ["-"] ["_"] target;
     targetUpperCase = toUpper targetUnderscore;
-    rest = removeAttrs args ["rustFlags" "cc" "cFlags"];
+    rest = removeAttrs args ["rustFlags" "cc" "cFlags" "targetDeps"];
     # by adding the dependency in the (target specific) linker args instead of buildInputs
     # we can prevent it trying to link to it for host build dependencies
     rustFlagsWithDeps = rustFlags + concatStrings (map (targetDep: " -Clink-arg=-L${targetDep}/lib") targetDeps);
