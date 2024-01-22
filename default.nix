@@ -96,7 +96,10 @@
     };
   };
   hostTarget = hostPlatform.config;
-  naersk' = callPackage naersk {};
+  naersk' = callPackage naersk {
+    cargo = toolchain;
+    rustc = toolchain;
+  };
   crossArgs = options: recursiveMerge [defaultCrossArgs (options.crossArgs or {})];
 in rec {
   buildPackage = target: let
