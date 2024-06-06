@@ -85,7 +85,10 @@
     "x86_64-unknown-freebsd" = buildCrossArgs "x86_64-unknown-freebsd" {
       targetStdenv = pkgsCross.x86_64-freebsd.stdenv;
       targetDeps = [freebsdSysrootX86];
-      rustFlags = "-C target-feature=+crt-static -Clink-arg=--sysroot=${freebsdSysrootX86}";
+      dontPatchELF = true;
+      postInstall = ''
+        patchelf --set-interpreter /libexec/ld-elf.so.1 $out/bin/*
+      '';
       X86_64_UNKNOWN_FREEBSD_OPENSSL_DIR = freebsdSysrootX86;
       BINDGEN_EXTRA_CLANG_ARGS_x86_64_unknown_freebsd = "--sysroot=${freebsdSysrootX86}";
     };
