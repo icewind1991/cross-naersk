@@ -9,6 +9,7 @@
   fetchurl,
   perl,
   mkShell,
+  freebsdCross,
   toolchain ? rust-bin.stable.latest.default
 } @ inputs: let
   inherit (lib.strings) replaceStrings toUpper concatStrings hasInfix;
@@ -16,8 +17,8 @@
 
   freebsdSysrootX86 = callPackage ./freebsd-sysroot.nix {
     arch = "amd64";
-    sha256 = "sha256-OpJQ96/XMLvidGkYWXVpSLPFepm82jDWXUauMAJZBvA=";
-    version = "13.2";
+    sha256 = "sha256-/XZXt0bPI9bTXrD+TR2KYzhE7wKpVAvKndWL3tqe5cg=";
+    version = freebsdCross.versionData.revision;
   };
 
   recursiveMerge = callPackage ./merge.nix {};
