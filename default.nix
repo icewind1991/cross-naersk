@@ -17,7 +17,7 @@
 
   freebsdSysrootX86 = callPackage ./freebsd-sysroot.nix {
     arch = "amd64";
-    sha256 = "sha256-/XZXt0bPI9bTXrD+TR2KYzhE7wKpVAvKndWL3tqe5cg=";
+    sha256 = "sha256-mSs4y7FYFK+3nLTXnZruQ9WuK8/Fvq4Z05UbwaGqXGg=";
     version = freebsdCross.versionData.revision;
   };
 
