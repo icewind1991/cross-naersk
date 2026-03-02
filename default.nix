@@ -3,7 +3,6 @@
   lib,
   pkgsCross,
   callPackage,
-  hostPlatform,
   naersk,
   stdenv,
   fetchurl,
@@ -99,7 +98,7 @@
       targetStdenv = pkgsCross.gnu64.stdenv;
     };
   };
-  hostTarget = hostPlatform.config;
+  hostTarget = stdenv.hostPlatform.config;
   naersk' = callPackage naersk {
     cargo = toolchain;
     rustc = toolchain;
