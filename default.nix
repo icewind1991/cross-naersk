@@ -3,7 +3,6 @@
   lib,
   pkgsCross,
   callPackage,
-  hostPlatform,
   naersk,
   stdenv,
   fetchurl,
@@ -17,8 +16,8 @@
 
   freebsdSysrootX86 = callPackage ./freebsd-sysroot.nix {
     arch = "amd64";
-    sha256 = "sha256-mSs4y7FYFK+3nLTXnZruQ9WuK8/Fvq4Z05UbwaGqXGg=";
-    version = freebsdCross.versionData.revision;
+    sha256 = "sha256-OLnHge+hTwjvMNTiChI7YWOhkFUJKj2WQ33SaCa7h4E=";
+    version = "15.0";
   };
 
   recursiveMerge = callPackage ./merge.nix {};
@@ -99,7 +98,7 @@
       targetStdenv = pkgsCross.gnu64.stdenv;
     };
   };
-  hostTarget = hostPlatform.config;
+  hostTarget = stdenv.hostPlatform.config;
   naersk' = callPackage naersk {
     cargo = toolchain;
     rustc = toolchain;
