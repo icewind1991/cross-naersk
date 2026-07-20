@@ -95,10 +95,8 @@ let
     "x86_64-pc-windows-gnu" = buildCrossArgs "x86_64-pc-windows-gnu" {
       targetStdenv = pkgsCross.mingwW64.stdenv;
       strictDeps = true;
-      # rink wants perl for windows targets
-      buildInputs = [ perl ];
       targetDeps = [ pkgsCross.mingwW64.windows.pthreads ];
-      rustFlags = "-C target-feature=+crt-static";
+      rustFlags = "-C target-feature=+crt-static -C dlltool=${pkgsCross.mingwW64.stdenv.cc}/bin/x86_64-w64-mingw32-dlltool";
     };
     "x86_64-unknown-freebsd" = buildCrossArgs "x86_64-unknown-freebsd" {
       targetStdenv = pkgsCross.x86_64-freebsd.stdenv;
